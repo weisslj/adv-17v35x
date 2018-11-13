@@ -1,3 +1,10 @@
+adv-17v35x (5.0.4.0-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * New upstream version.
+
+ -- Johannes Weißl <jargon@molb.org>  Tue, 13 Nov 2018 22:52:29 +0100
+
 adv-17v35x (5.0.3.0-2) unstable; urgency=medium
 
   * Add 0001-Update-for-timer-api-changes-in-Linux-4.15.patch, thanks to 
