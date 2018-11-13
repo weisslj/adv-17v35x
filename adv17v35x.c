@@ -2,7 +2,7 @@
 /*
 *      adv17v35x.c  -- Advantech multiport serial driver.
 *
-*      Copyright (C) 2016 Advantech Corporation.
+*      Copyright (C) 2018 Advantech Corporation.
 *
 *      Based on Linux 2.6.37 Kernel's  drivers/serial/8250.c and /8250_pci.c
 *
@@ -24,9 +24,9 @@
 *	   Multiport Serial Driver for EXAR's PCI Family of UARTs (XR17V358/354/352)
 *
 *       ChangeLog:
-*	   for			: LINUX 2.6.9 and newer (Tested on various kernel versions from 2.6.9 to 4.2.x)
-*	   date			: Mar 2017
-*	   version		: 5.0.3.0
+*	   for			: Tested on various kernel versions from 2.6.9 to 4.11.8
+*	   date			: Mar 2018
+*	   version		: 5.0.4.0
 *
 *	Check Release Notes for information on what has changed in the new version.
 *
@@ -86,12 +86,15 @@ struct serial_uart_config {
  * Definitions for PCI support.
  */
 
-#define ADVANTECH_EXAR_VER	        "5.0.3.0"
-#define ADVANTECH_EXAR_DATE	        "2017/03/06"
-#define ADVANTECH_EXAR_FILE_VER     "5.0.3.0"
+#define ADVANTECH_EXAR_VER	        "5.0.3.2"
+#define ADVANTECH_EXAR_DATE	        "2017/10/12"
+#define ADVANTECH_EXAR_FILE_VER     "5.0.3.2"
 
 #define ADVANTECH_VID	            0x13FE
 
+/*
+ * PCIE cards
+ */
 #define PCIE_1602		            0x000E
 #define PCIE_1604		            0x000D
 #define PCIE_1610		            0x000C
@@ -99,12 +102,26 @@ struct serial_uart_config {
 #define PCIE_1620		            0x000A
 #define PCIE_1622		            0x0009
 
-// support for beijing's cards
+/*
+ * Beijing products
+ */
 #define PCIE_0014					0x0014
 #define PCIE_0015					0x0015
 #define PCIE_0016					0x0016
 
+/*
+ * PCM cards
+ */
+
+#define PCM_2602C                   0x0063
+#define PCM_2604C                   0x0061
+#define PCM_2612B                   0x0062
+#define PCM_2610B                   0x0064
 #define PCM_3612I                   0x001F
+
+/*
+ * PCI cards
+ */
 #define PCI_1602                    0x0018
 #define PCI_1604                    0x0019
 #define PCI_1610                    0x001A
@@ -134,9 +151,10 @@ struct serial_uart_config {
 #define XR_17V35X_EXTENDED_TXTRG	10
 #define XR_17V35X_RXFIFO_CNT		11
 #define XR_17V35X_EXTENDED_RXTRG	11
-#define XR_17V35X_UART_XOFF2        	13 
-#define XR_17V35X_UART_XOFF1 		0xC0
-#define XR_17V35X_UART_XON1		0xE0
+#define XR_17V35X_UART_XOFF1 		0x0C
+#define XR_17V35X_UART_XOFF2		0x0D
+#define XR_17V35X_UART_XON1			0x0E
+#define XR_17V35X_UART_XON2			0x0F
 #define XR_17V35X_FCTR_RTS_8DELAY	0x03
 #define XR_17V35X_FCTR_TRGD		192
 #define XR_17V35x_FCTR_RS485	        0x20
@@ -445,6 +463,9 @@ pci_default_setup(struct serial_private *priv,
  */
 static struct pci_serial_quirk pci_serial_quirks[] = {	
 	{
+/*
+ * PCIE cards
+ */
 		.vendor		= ADVANTECH_VID,
 		.device		= PCIE_1602,
 		.subvendor	= PCI_ANY_ID,
@@ -516,6 +537,41 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
 		.setup		= pci_default_setup,	
 	},
 
+/*
+ * PCM cards
+ */
+	{
+		.vendor		= ADVANTECH_VID,
+		.device		= PCM_2602C,
+		.subvendor	= PCI_ANY_ID,
+		.subdevice	= PCI_ANY_ID,
+		.setup		= pci_default_setup,
+	},
+
+	{
+		.vendor		= ADVANTECH_VID,
+		.device		= PCM_2604C,
+		.subvendor	= PCI_ANY_ID,
+		.subdevice	= PCI_ANY_ID,
+		.setup		= pci_default_setup,
+	},
+
+	{
+		.vendor		= ADVANTECH_VID,
+		.device		= PCM_2612B,
+		.subvendor	= PCI_ANY_ID,
+		.subdevice	= PCI_ANY_ID,
+		.setup		= pci_default_setup,
+	},
+
+	{
+		.vendor		= ADVANTECH_VID,
+		.device		= PCM_2610B,
+		.subvendor	= PCI_ANY_ID,
+		.subdevice	= PCI_ANY_ID,
+		.setup		= pci_default_setup,
+	},
+
 	{
 		.vendor		= ADVANTECH_VID,
 		.device		= PCM_3612I,
@@ -523,6 +579,10 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
 		.subdevice	= PCI_ANY_ID,
 		.setup		= pci_default_setup,	
 	},
+
+/*
+ * PCI cards
+ */
 	{
 		.vendor		= ADVANTECH_VID,
 		.device		= PCI_1602,
@@ -635,7 +695,7 @@ static int serial_get_mode(struct uart_adv_port *up)
 }
 
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 14)
 static void serialadv_stop_tx(struct uart_port *port, unsigned int tty_stop)
 #else
 static void serialadv_stop_tx(struct uart_port *port)
@@ -649,7 +709,7 @@ static void serialadv_stop_tx(struct uart_port *port)
 	}
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 14)
 static void serialadv_start_tx(struct uart_port *port, unsigned int tty_stop)
 #else
 static void serialadv_start_tx(struct uart_port *port)
@@ -741,7 +801,7 @@ receive_chars(struct uart_adv_port *up, unsigned int *status)
 	
 	for(i = 0; i < datasize_in_fifo; i++)
 	{
-	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 21)
+	#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 	    if (uart_handle_sysrq_char(&up->port, ch[i], NULL)) 
 	#else
 		if (uart_handle_sysrq_char(&up->port, ch[i])) 
@@ -770,7 +830,7 @@ static void transmit_chars(struct uart_adv_port *up)
 	struct circ_buf *xmit = &up->port.state->xmit;
 #endif
 	int count, bytes_in_fifo;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 16)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
 	int tmp;
 #endif
 
@@ -781,7 +841,7 @@ static void transmit_chars(struct uart_adv_port *up)
 		return;
 	}
 	if (uart_tx_stopped(&up->port)) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 14)
 		serialadv_stop_tx(&up->port, 0);
 #else
 		serialadv_stop_tx(&up->port);
@@ -789,7 +849,7 @@ static void transmit_chars(struct uart_adv_port *up)
 		return;
 	}
 	if (uart_circ_empty(xmit)) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 14)
 		serialadv_stop_tx(&up->port, 0);
 #else
 		serialadv_stop_tx(&up->port);
@@ -808,7 +868,7 @@ static void transmit_chars(struct uart_adv_port *up)
 	if (uart_circ_chars_pending(xmit) < count)
 		count = uart_circ_chars_pending(xmit);
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 14)
 	if(count > 0)
 	{
 		//serial_out(up, UART_TX, xmit->buf[xmit->tail]);
@@ -848,7 +908,7 @@ static void transmit_chars(struct uart_adv_port *up)
 	DEBUG_INTR("THRE...");
 
 	if (uart_circ_empty(xmit))
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 14)
 		serialadv_stop_tx(&up->port, 0);
 #else
 		serialadv_stop_tx(&up->port);
@@ -1010,7 +1070,7 @@ static int serial_link_irq_chain(struct uart_adv_port *up)
 	struct hlist_node *n;
 	struct irq_info *i;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 16)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 14)
 	int ret, irq_flags = up->port.flags & UPF_SHARE_IRQ ? IRQF_SHARED : 0;
 #else
 	int ret, irq_flags = up->port.flags & UPF_SHARE_IRQ ? SA_SHIRQ : 0;
@@ -1058,7 +1118,7 @@ static int serial_link_irq_chain(struct uart_adv_port *up)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)
 		//irq_flags = up->port.flags & UPF_SHARE_IRQ ? IRQF_SHARED: 0;
 		irq_flags |= up->port.irqflags;
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 14)
 		irq_flags = up->port.flags & UPF_SHARE_IRQ ? SA_SHIRQ : 0;
 #else
 		irq_flags = up->port.flags & UPF_SHARE_IRQ ? IRQF_SHARED : 0;
@@ -1657,34 +1717,35 @@ serialadv_set_termios(struct uart_port *port, struct ktermios *termios,
 		serial_out(up, XR_17V35X_UART_XON1,0x11); //Initializing XON1
 		serial_out(up, XR_17V35X_UART_XOFF1,0x13); //Initializing XOFF1
 		serial_out(up, XR_17V35X_EXTENDED_EFR, (reg_read & 0xF0) | 0x0A );
-		printk(KERN_INFO "Software Flow Control Enabled\n");
+		DEBUG_INTR(KERN_INFO "Software Flow Control Enabled\n");
 	}
 	else 
 	{
 		serial_out(up, XR_17V35X_EXTENDED_EFR, (reg_read) & 0xF0 );
-		printk(KERN_INFO "No Software Flow Control\n");
+		DEBUG_INTR(KERN_INFO "No Software Flow Control\n");
 	}	
 
-	reg_read=serial_in(up, XR_17V35X_EXTENDED_EFR);
+	reg_read = serial_in(up,XR_17V35X_EXTENDED_EFR);
+	reg_read |= 0x10;
+	serial_out(up, XR_17V35X_EXTENDED_EFR, reg_read);
 	if((termios->c_iflag) & IXANY)
 	{
-		serial_out(up, XR_17V35X_EXTENDED_EFR, ((termios->c_iflag) & IXOFF)&&((termios->c_iflag) & IXON)?((reg_read) | 0x2A):((reg_read) | 0x20));
-		reg_read=serial_in(up, UART_MCR);
-		serial_out(up, UART_MCR, ((reg_read) & 0xDF) | 0x20 );
-		reg_read=serial_in(up,XR_17V35X_EXTENDED_EFR);
-		serial_out(up, XR_17V35X_EXTENDED_EFR, (reg_read) & 0xEF );
-		printk(KERN_INFO "AUTO XANY Enabled\n");
+		reg_read = serial_in(up, UART_MCR);
+		reg_read |= 0x20;
+		serial_out(up, UART_MCR, reg_read);
+		DEBUG_INTR(KERN_INFO "AUTO XANY Enabled\n");
 	}
 	else 
 	{
-		serial_out(up, XR_17V35X_EXTENDED_EFR, (reg_read) | 0x10 );
-		reg_read=serial_in(up, UART_MCR);
-		serial_out(up, UART_MCR, (reg_read) & 0xDF );
-		reg_read=serial_in(up,XR_17V35X_EXTENDED_EFR);
-		serial_out(up, XR_17V35X_EXTENDED_EFR, (reg_read) & 0xEF );
-		printk(KERN_INFO "AUTO XANY NOT Enabled\n");
+		reg_read = serial_in(up, UART_MCR);
+		reg_read &= ~0x20;
+		serial_out(up, UART_MCR, reg_read);
+		DEBUG_INTR(KERN_INFO "AUTO XANY NOT Enabled\n");
 	}
-	
+	reg_read = serial_in(up,XR_17V35X_EXTENDED_EFR);
+	reg_read &= ~0x10;
+	serial_out(up, XR_17V35X_EXTENDED_EFR, reg_read);
+
 //---------------------------------------------------------------------------//
 
 	if(!((baud == 38400) && ((port->flags & UPF_SPD_MASK) == UPF_SPD_CUST)))
@@ -1750,8 +1811,7 @@ serialadv_set_termios(struct uart_port *port, struct ktermios *termios,
 		serial_out(up, XR_17V35x_MPIOSEL_7_0,0x0FF); //0x0ff= ALL INPUTS
 		serial_out(up, XR_17V35x_MPIOSEL_15_8,0x0FF); //0x0ff= ALL INPUTS
 	}
-	
-	serialadv_set_mctrl(&up->port, up->port.mctrl);
+
 #if ENABLE_INTERNAL_LOOPBACK
 	reg_read=serial_in(up, UART_MCR);
 	serial_out(up, UART_MCR, (reg_read) | 0x10);
@@ -2514,6 +2574,9 @@ static void __devexit remove_one_advpciserialcard(struct pci_dev *dev)
 
 
 static struct pci_device_id advserial_pci_tbl[] = {
+/*
+ * PCIE cards
+ */
 	{	ADVANTECH_VID, PCIE_1602,
 		PCI_ANY_ID, PCI_ANY_ID,
 		0, 0, adv_2port },
@@ -2541,9 +2604,29 @@ static struct pci_device_id advserial_pci_tbl[] = {
 	{	ADVANTECH_VID, PCIE_0016,
 		PCI_ANY_ID, PCI_ANY_ID,
 		0, 0, adv_2port },	
+
+/*
+ * PCM cards
+ */
+	{	ADVANTECH_VID, PCM_2602C,
+		PCI_ANY_ID, PCI_ANY_ID,
+		0, 0, adv_2port },
+	{	ADVANTECH_VID, PCM_2604C,
+		PCI_ANY_ID, PCI_ANY_ID,
+		0, 0, adv_2port },
+	{	ADVANTECH_VID, PCM_2612B,
+		PCI_ANY_ID, PCI_ANY_ID,
+		0, 0, adv_4port },
+	{	ADVANTECH_VID, PCM_2610B,
+		PCI_ANY_ID, PCI_ANY_ID,
+		0, 0, adv_4port },
 	{	ADVANTECH_VID, PCM_3612I,
 		PCI_ANY_ID, PCI_ANY_ID,
 		0, 0, adv_4port },
+
+/*
+ * PCI cards
+ */
 	{	ADVANTECH_VID, PCI_1602,
 		PCI_ANY_ID, PCI_ANY_ID,
 		0, 0, adv_2port },
@@ -2587,7 +2670,9 @@ static int __init serialadv_init(void)
 	printk("Devices:  ICOM: PCIE-1602, PCIE-1604\n"
 			"                PCIE-1610, PCIE-1612\n"
 			"                PCIE-1620, PCIE-1622\n"
-			"                PCM_3612I\n"
+			"                PCM-2602C, PCM-2604C\n"
+			"                PCM-2610B, PCM-2612B\n"
+			"                PCM-3612I\n"
 			"                PCI-1602, PCI-1604\n"
 			"                PCI-1610, PCI-1612\n"
 			"                PCI-1620, PCI-1622\n"
