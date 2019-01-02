@@ -86,9 +86,9 @@ struct serial_uart_config {
  * Definitions for PCI support.
  */
 
-#define ADVANTECH_EXAR_VER	        "5.0.3.2"
-#define ADVANTECH_EXAR_DATE	        "2017/10/12"
-#define ADVANTECH_EXAR_FILE_VER     "5.0.3.2"
+#define ADVANTECH_EXAR_VER	        "5.0.5.0"
+#define ADVANTECH_EXAR_DATE	        "2018/10/26"
+#define ADVANTECH_EXAR_FILE_VER     "5.0.5.0"
 
 #define ADVANTECH_VID	            0x13FE
 
